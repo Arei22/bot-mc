@@ -1,0 +1,41 @@
+[package]
+name = "scan-website-discord-bot"
+version = "0.1.8"
+authors = ["Arei2", "Asthowen<contact@asthowen.fr>"]
+edition = "2024"
+description = "A Discord bot to initiate downloads on ScanWebsite based on filters applied to messages."
+repository = "https://github.com/arei22/scan-website-discord-bot"
+readme = "README.md"
+publish = false
+
+[profile.release]
+codegen-units = 1
+strip = true
+lto = true
+
+[dependencies]
+tokio = { version = "1.47.1", default-features = false, features = [
+    "macros",
+    "rt-multi-thread",
+    "signal",
+    "rt",
+] }
+diesel-async = { version = "0.6.1", features = [
+    "postgres",
+    "bb8",
+    "async-connection-wrapper",
+] }
+serenity = { version = "0.12.4", features = [
+    "client",
+    "framework",
+    "gateway",
+    "model",
+] }
+diesel = { version = "2.2.12", features = ["postgres", "uuid"] }
+reqwest = { version = "0.12.23", features = ["json"] }
+serde = { version = "1.0.219", features = ["derive"] }
+diesel_migrations = "2.2.0"
+env_logger = "0.11.8"
+dotenvy = "0.15.7"
+chrono = "0.4.41"
+log = "0.4.27"
