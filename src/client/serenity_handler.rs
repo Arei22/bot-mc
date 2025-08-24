@@ -27,6 +27,9 @@ impl EventHandler for SerenityHandler {
                 vec![
                     commands::create::register(),
                     commands::list_severs::register(),
+                    commands::delete::register(),
+                    commands::start::register(),
+                    commands::stop::register(),
                 ],
             )
             .await;
@@ -41,6 +44,9 @@ impl EventHandler for SerenityHandler {
             let content_res = match command.data.name.as_str() {
                 "create" => commands::create::run(&ctx, &command.data.options()).await,
                 "list-servers" => commands::list_severs::run(&ctx).await,
+                "delete" => commands::delete::run(&ctx, &command.data.options()).await,
+                "start" => commands::start::run(&ctx, &command.data.options()).await,
+                "stop" => commands::stop::run(&ctx, &command.data.options()).await,
                 _ => Err(ClientError::OtherStatic(
                     "Slash command defined at Discord but not in the bot.",
                 )),

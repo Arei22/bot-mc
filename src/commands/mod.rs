@@ -2,7 +2,10 @@ use crate::client::error::ClientError;
 use serenity::all::{ResolvedOption, ResolvedValue};
 
 pub mod create;
+pub mod delete;
 pub mod list_severs;
+pub mod start;
+pub mod stop;
 
 pub fn extract_filter<'a>(
     index: usize,
