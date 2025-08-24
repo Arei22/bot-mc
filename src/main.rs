@@ -15,7 +15,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
         "DISCORD_TOKEN",
         "DISCORD_APP_ID",
         "DISCORD_GUILD_ID",
-        "DISCORD_CHANNEL_ID",
         "DATABASE_URL",
     ]);
 

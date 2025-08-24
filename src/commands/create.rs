@@ -8,9 +8,12 @@ use crate::util::{EMBED_COLOR, get_pool_from_ctx};
 use diesel::dsl::exists;
 use diesel::{ExpressionMethods, QueryDsl, insert_into};
 use diesel_async::RunQueryDsl;
+use serde_yml::Mapping;
+use serde_yml::Value;
 use serenity::all::{
     CommandOptionType, Context, CreateCommand, CreateCommandOption, CreateEmbed, ResolvedOption,
 };
+use tokio::fs;
 
 pub async fn run(ctx: &Context, options: &[ResolvedOption<'_>]) -> Result<Msg, ClientError> {
     let name = extract_filter(0, options)?.to_lowercase();
@@ -26,6 +29,39 @@ pub async fn run(ctx: &Context, options: &[ResolvedOption<'_>]) -> Result<Msg, C
     if serv_exist {
         return Err(ClientError::OtherStatic("Ce nom de serveur existe déjà."));
     }
+
+    let mut services = Mapping::new();
+
+    let mut mc = Mapping::new();
+    mc.insert(
+        Value::String("image".into()),
+        Value::String("itzg/minecraft-server".into()),
+    );
+    mc.insert(Value::String("tty".into()), Value::Bool(true));
+    mc.insert(Value::String("stdin_open".into()), Value::Bool(true));
+    mc.insert(
+        Value::String("ports".into()),
+        Value::Sequence(vec![Value::String("25565:25565".into())]),
+    );
+
+    let mut env = Mapping::new();
+    env.insert(Value::String("EULA".into()), Value::String("TRUE".into()));
+    mc.insert(Value::String("environment".into()), Value::Mapping(env));
+
+    mc.insert(
+        Value::String("volumes".into()),
+        Value::Sequence(vec![Value::String("./data:/data".into())]),
+    );
+
+    services.insert(Value::String("mc".into()), Value::Mapping(mc));
+
+    let mut root = Mapping::new();
+    root.insert(Value::String("services".into()), Value::Mapping(services));
+
+    let yml_str = serde_yml::to_string(&root)?;
+
+    fs::create_dir_all(format!("worlds/{name}")).await?;
+    fs::write(format!("worlds/{name}/docker-compose.yml"), yml_str).await?;
 
     insert_into(servers_dsl::servers)
         .values((servers_dsl::name.eq(&name),))

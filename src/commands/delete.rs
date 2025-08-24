@@ -10,6 +10,7 @@ use diesel_async::RunQueryDsl;
 use serenity::all::{
     CommandOptionType, Context, CreateCommand, CreateCommandOption, CreateEmbed, ResolvedOption,
 };
+use tokio::fs;
 
 pub async fn run(ctx: &Context, options: &[ResolvedOption<'_>]) -> Result<Msg, ClientError> {
     let name = extract_filter(0, options)?.to_lowercase();
@@ -38,6 +39,8 @@ pub async fn run(ctx: &Context, options: &[ResolvedOption<'_>]) -> Result<Msg, C
     if !serv_stoped {
         return Err(ClientError::OtherStatic("Ce serveur est lancé."));
     }
+
+    fs::remove_dir_all(format!("worlds/{name}")).await?;
 
     delete(servers_dsl::servers)
         .filter(servers_dsl::name.eq(&name))
