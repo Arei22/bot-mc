@@ -19,6 +19,7 @@ tokio = { version = "1.47.1", default-features = false, features = [
     "rt-multi-thread",
     "signal",
     "rt",
+    "process",
 ] }
 diesel-async = { version = "0.6.1", features = [
     "postgres",

@@ -4,6 +4,7 @@ use crate::database::postgresql::PgPool;
 use crate::database::postgresql::PgPooled;
 use crate::database::schemas::servers::dsl as servers_dsl;
 use crate::util::msg::Msg;
+use crate::util::parse_key;
 use crate::util::{EMBED_COLOR, get_pool_from_ctx};
 use diesel::dsl::exists;
 use diesel::{ExpressionMethods, QueryDsl, insert_into};
@@ -46,6 +47,10 @@ pub async fn run(ctx: &Context, options: &[ResolvedOption<'_>]) -> Result<Msg, C
 
     let mut env = Mapping::new();
     env.insert(Value::String("EULA".into()), Value::String("TRUE".into()));
+    env.insert(
+        Value::String("OPS".to_string()),
+        Value::String(parse_key::<String>("ADMIN_PLAYER")?),
+    );
     mc.insert(Value::String("environment".into()), Value::Mapping(env));
 
     mc.insert(

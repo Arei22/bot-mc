@@ -10,6 +10,7 @@ use diesel_async::RunQueryDsl;
 use serenity::all::{
     CommandOptionType, Context, CreateCommand, CreateCommandOption, CreateEmbed, ResolvedOption,
 };
+use tokio::process::Command;
 
 pub async fn run(ctx: &Context, options: &[ResolvedOption<'_>]) -> Result<Msg, ClientError> {
     let name = extract_filter(0, options)?.to_lowercase();
@@ -38,6 +39,12 @@ pub async fn run(ctx: &Context, options: &[ResolvedOption<'_>]) -> Result<Msg, C
     if serv_stoped {
         return Err(ClientError::OtherStatic("Ce serveur est déjà arrêté."));
     }
+
+    Command::new("docker")
+        .args(["compose", "down"])
+        .current_dir(format!("worlds/{name}"))
+        .status()
+        .await?;
 
     diesel::update(servers_dsl::servers.filter(servers_dsl::name.eq(&name)))
         .set(servers_dsl::adresse.eq(None::<String>))

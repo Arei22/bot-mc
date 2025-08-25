@@ -16,9 +16,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
         "DISCORD_APP_ID",
         "DISCORD_GUILD_ID",
         "DATABASE_URL",
+        "ADMIN_PLAYER",
     ]);
 
-    log::info!("Start scan-website-bot...");
+    log::info!("Start bot-mc...");
 
     run_migration().await;
 
