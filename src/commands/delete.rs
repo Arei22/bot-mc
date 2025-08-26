@@ -1,5 +1,5 @@
 use crate::client::error::ClientError;
-use crate::commands::extract_filter;
+use crate::commands::extract_str;
 use crate::database::postgresql::{PgPool, PgPooled};
 use crate::database::schemas::servers::dsl as servers_dsl;
 use crate::util::msg::Msg;
@@ -13,7 +13,7 @@ use serenity::all::{
 use tokio::fs;
 
 pub async fn run(ctx: &Context, options: &[ResolvedOption<'_>]) -> Result<Msg, ClientError> {
-    let name = extract_filter(0, options)?.to_lowercase();
+    let name = extract_str(0, options)?.to_lowercase();
 
     let pool: PgPool = get_pool_from_ctx(ctx).await?;
     let mut conn: PgPooled = pool.get().await?;

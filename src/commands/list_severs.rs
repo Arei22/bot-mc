@@ -17,6 +17,7 @@ const ELEMENT_PER_PAGE: u64 = 8;
 struct ServersList {
     pub name: String,
     pub adresse: Option<String>,
+    pub version: String,
 }
 
 async fn get_servers(
@@ -37,7 +38,11 @@ async fn get_servers(
 
     #[allow(clippy::cast_possible_wrap)]
     let servers: Vec<ServersList> = servers_dsl::servers
-        .select((servers_dsl::name, servers_dsl::adresse))
+        .select((
+            servers_dsl::name,
+            servers_dsl::adresse,
+            servers_dsl::version,
+        ))
         .limit(ELEMENT_PER_PAGE as i64)
         .offset(i64::try_from(page.saturating_sub(1) * ELEMENT_PER_PAGE)?)
         .load::<ServersList>(&mut conn)
@@ -62,9 +67,10 @@ pub async fn run(ctx: &Context) -> Result<Msg, ClientError> {
     let mut prefixes_strings: Vec<String> = Vec::new();
     for server in servers {
         prefixes_strings.push(format!(
-            "* **{}**\n  * **Adresse** : [{}]",
+            "* **{}**\n  * **Adresse** : [{}]\n  * **Version** : [{}]",
             server.name,
             server.adresse.as_deref().unwrap_or(""),
+            server.version,
         ));
     }
 
@@ -114,9 +120,10 @@ pub async fn get_page(
     let mut prefixes_strings: Vec<String> = Vec::new();
     for server in servers {
         prefixes_strings.push(format!(
-            "* **{}**\n  * **Adresse** : [{}]",
+            "* **{}**\n  * **Adresse** : [{}]\n  * **Version** : [{}]",
             server.name,
             server.adresse.as_deref().unwrap_or(""),
+            server.version
         ));
     }
 

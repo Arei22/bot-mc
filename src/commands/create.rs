@@ -1,5 +1,6 @@
 use crate::client::error::ClientError;
-use crate::commands::extract_filter;
+use crate::commands::extract_str;
+use crate::commands::extract_str_optional;
 use crate::database::postgresql::PgPool;
 use crate::database::postgresql::PgPooled;
 use crate::database::schemas::servers::dsl as servers_dsl;
@@ -17,7 +18,8 @@ use serenity::all::{
 use tokio::fs;
 
 pub async fn run(ctx: &Context, options: &[ResolvedOption<'_>]) -> Result<Msg, ClientError> {
-    let name = extract_filter(0, options)?.to_lowercase();
+    let name = extract_str(0, options)?.to_lowercase();
+    let ver = extract_str_optional(1, options)?;
 
     let pool: PgPool = get_pool_from_ctx(ctx).await?;
     let mut conn: PgPooled = pool.get().await?;
@@ -51,6 +53,13 @@ pub async fn run(ctx: &Context, options: &[ResolvedOption<'_>]) -> Result<Msg, C
         Value::String("OPS".to_string()),
         Value::String(parse_key::<String>("ADMIN_PLAYER")?),
     );
+    if let Some(version) = ver {
+        env.insert(
+            Value::String("VERSION".to_string()),
+            Value::String(version.to_string()),
+        );
+    }
+
     mc.insert(Value::String("environment".into()), Value::Mapping(env));
 
     mc.insert(
@@ -69,7 +78,10 @@ pub async fn run(ctx: &Context, options: &[ResolvedOption<'_>]) -> Result<Msg, C
     fs::write(format!("worlds/{name}/docker-compose.yml"), yml_str).await?;
 
     insert_into(servers_dsl::servers)
-        .values((servers_dsl::name.eq(&name),))
+        .values((
+            servers_dsl::name.eq(&name),
+            servers_dsl::version.eq(ver.map_or_else(|| "latest", |version| version).to_string()),
+        ))
         .execute(&mut conn)
         .await?;
 
@@ -100,5 +112,14 @@ pub fn register() -> CreateCommand {
             .description_localized("en-US", "The name of the server to be created.")
             .description_localized("en-GB", "The name of the server to be created.")
             .required(true),
+        )
+        .add_option(
+            CreateCommandOption::new(
+                CommandOptionType::String,
+                "version",
+                "La version du serveur.",
+            )
+            .description_localized("en-US", "The version of the server to be created.")
+            .description_localized("en-GB", "The version of the server to be created."),
         )
 }

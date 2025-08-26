@@ -7,7 +7,7 @@ pub mod list_severs;
 pub mod start;
 pub mod stop;
 
-pub fn extract_filter<'a>(
+pub fn extract_str<'a>(
     index: usize,
     options: &'a [ResolvedOption<'_>],
 ) -> Result<&'a str, ClientError> {
@@ -18,4 +18,18 @@ pub fn extract_filter<'a>(
             _ => None,
         })
         .ok_or_else(|| ClientError::Other(format!("Invalid value at index {index}.")))
+}
+
+pub fn extract_str_optional<'a>(
+    index: usize,
+    options: &'a [ResolvedOption<'_>],
+) -> Result<Option<&'a str>, ClientError> {
+    options
+        .get(index)
+        .map_or(Ok(None), |option| match &option.value {
+            ResolvedValue::String(value) => Ok(Some(*value)),
+            _ => Err(ClientError::Other(format!(
+                "Invalid value at index {index}."
+            ))),
+        })
 }

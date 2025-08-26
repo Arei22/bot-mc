@@ -7,4 +7,5 @@ use diesel::{Queryable, Selectable};
 pub struct Servers {
     pub name: String,
     pub adresse: Option<String>,
+    pub version: String,
 }
