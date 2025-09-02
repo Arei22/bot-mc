@@ -1,13 +1,12 @@
 use crate::client::error::ClientError;
 use crate::database::postgresql::{PgPool, PgPooled};
 use crate::database::schemas::servers::dsl as servers_dsl;
-use crate::util::msg::Msg;
 use crate::util::{EMBED_COLOR, get_pool_from_ctx};
 use diesel::{QueryDsl, Queryable};
 use diesel_async::RunQueryDsl;
 use serenity::all::{
-    Context, CreateActionRow, CreateButton, CreateCommand, CreateEmbedFooter,
-    EditInteractionResponse,
+    CommandInteraction, Context, CreateActionRow, CreateButton, CreateCommand, CreateEmbedFooter,
+    CreateInteractionResponseMessage, EditInteractionResponse,
 };
 use serenity::builder::CreateEmbed;
 
@@ -51,50 +50,66 @@ async fn get_servers(
     Ok((servers, (servers_count as u64).div_ceil(ELEMENT_PER_PAGE)))
 }
 
-pub async fn run(ctx: &Context) -> Result<Msg, ClientError> {
+pub async fn run(ctx: &Context, command: &CommandInteraction) -> Result<(), ClientError> {
     let (servers, pages_count) = get_servers(ctx, &mut 0).await?;
     if servers.is_empty() {
-        let msg = Msg {
-            embed: CreateEmbed::new()
-                .description("Aucun serveur n'a été créé.")
-                .color(EMBED_COLOR),
-            buttons: vec![],
-        };
+        let embed = CreateEmbed::new()
+            .description("Aucun serveur n'a été créé.")
+            .color(EMBED_COLOR);
 
-        return Ok(msg);
+        command
+            .create_response(
+                &ctx.http,
+                serenity::builder::CreateInteractionResponse::Message(
+                    CreateInteractionResponseMessage::new().add_embed(embed),
+                ),
+            )
+            .await?;
+
+        return Ok(());
     }
 
     let mut prefixes_strings: Vec<String> = Vec::new();
     for server in servers {
         prefixes_strings.push(format!(
-            "* **{}**\n  * **Adresse** : [{}]\n  * **Version** : [{}]",
+            "* **{}**\n  * **Adresse** : ``{}``\n  * **Version** : ``{}``",
             server.name,
             server.adresse.as_deref().unwrap_or(""),
             server.version,
         ));
     }
 
-    let msg = Msg {
-        embed: CreateEmbed::new()
-            .title("Liste des serveurs")
-            .description(prefixes_strings.join("\n"))
-            .footer(CreateEmbedFooter::new(format!("Page 1/{pages_count}")))
-            .color(EMBED_COLOR),
-        buttons: vec![
-            CreateButton::new("page-0")
-                .label("Précédent")
-                .disabled(true),
-            CreateButton::new("page-2")
-                .label("Suivant")
-                .disabled(pages_count == 1),
-        ],
-    };
+    let embed = CreateEmbed::new()
+        .title("Liste des serveurs")
+        .description(prefixes_strings.join("\n"))
+        .footer(CreateEmbedFooter::new(format!("Page 1/{pages_count}")))
+        .color(EMBED_COLOR);
 
-    Ok(msg)
+    command
+        .create_response(
+            &ctx.http,
+            serenity::builder::CreateInteractionResponse::Message(
+                CreateInteractionResponseMessage::new()
+                    .add_embed(embed)
+                    .button(
+                        CreateButton::new("page-0")
+                            .label("Précédent")
+                            .disabled(true),
+                    )
+                    .button(
+                        CreateButton::new("page-2")
+                            .label("Suivant")
+                            .disabled(pages_count == 1),
+                    ),
+            ),
+        )
+        .await?;
+
+    Ok(())
 }
 
 pub fn register() -> CreateCommand {
-    CreateCommand::new("list-servers")
+    CreateCommand::new("list")
         .description("Lists all created servers.")
         .description_localized("en-US", "Lists all created servers.")
         .description_localized("en-GB", "Lists all created servers.")
@@ -120,7 +135,7 @@ pub async fn get_page(
     let mut prefixes_strings: Vec<String> = Vec::new();
     for server in servers {
         prefixes_strings.push(format!(
-            "* **{}**\n  * **Adresse** : [{}]\n  * **Version** : [{}]",
+            "* **{}**\n  * **Adresse** : ``{}``\n  * **Version** : ``{}``",
             server.name,
             server.adresse.as_deref().unwrap_or(""),
             server.version

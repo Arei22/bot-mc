@@ -4,7 +4,6 @@ use crate::commands::extract_str_optional;
 use crate::database::postgresql::PgPool;
 use crate::database::postgresql::PgPooled;
 use crate::database::schemas::servers::dsl as servers_dsl;
-use crate::util::msg::Msg;
 use crate::util::parse_key;
 use crate::util::{EMBED_COLOR, get_pool_from_ctx};
 use diesel::dsl::exists;
@@ -12,14 +11,14 @@ use diesel::{ExpressionMethods, QueryDsl, insert_into};
 use diesel_async::RunQueryDsl;
 use serde_yml::Mapping;
 use serde_yml::Value;
-use serenity::all::{
-    CommandOptionType, Context, CreateCommand, CreateCommandOption, CreateEmbed, ResolvedOption,
-};
+use serenity::all::CommandInteraction;
+use serenity::all::CreateInteractionResponseMessage;
+use serenity::all::{CommandOptionType, Context, CreateCommand, CreateCommandOption, CreateEmbed};
 use tokio::fs;
 
-pub async fn run(ctx: &Context, options: &[ResolvedOption<'_>]) -> Result<Msg, ClientError> {
-    let name = extract_str(0, options)?.to_lowercase();
-    let ver = extract_str_optional(1, options)?;
+pub async fn run(ctx: &Context, command: &CommandInteraction) -> Result<(), ClientError> {
+    let name = extract_str("name", command.data.options())?.to_lowercase();
+    let ver = extract_str_optional("version", command.data.options())?;
 
     let pool: PgPool = get_pool_from_ctx(ctx).await?;
     let mut conn: PgPooled = pool.get().await?;
@@ -74,8 +73,10 @@ pub async fn run(ctx: &Context, options: &[ResolvedOption<'_>]) -> Result<Msg, C
 
     let yml_str = serde_yml::to_string(&root)?;
 
-    fs::create_dir_all(format!("worlds/{name}")).await?;
-    fs::write(format!("worlds/{name}/docker-compose.yml"), yml_str).await?;
+    let dir = format!("worlds/{name}");
+
+    fs::create_dir_all(&dir).await?;
+    fs::write(format!("{dir}/docker-compose.yml"), yml_str).await?;
 
     insert_into(servers_dsl::servers)
         .values((
@@ -87,14 +88,20 @@ pub async fn run(ctx: &Context, options: &[ResolvedOption<'_>]) -> Result<Msg, C
 
     log::info!("Created \"{name}\" server!");
 
-    let msg = Msg {
-        embed: CreateEmbed::new()
-            .description("Le serveur a bien été créé !")
-            .color(EMBED_COLOR),
-        buttons: vec![],
-    };
+    let embed = CreateEmbed::new()
+        .description(format!("**Le serveur ``{name}`` a bien été créé !**"))
+        .color(EMBED_COLOR);
 
-    Ok(msg)
+    command
+        .create_response(
+            &ctx.http,
+            serenity::builder::CreateInteractionResponse::Message(
+                CreateInteractionResponseMessage::new().add_embed(embed),
+            ),
+        )
+        .await?;
+
+    Ok(())
 }
 
 pub fn register() -> CreateCommand {
@@ -111,7 +118,8 @@ pub fn register() -> CreateCommand {
             )
             .description_localized("en-US", "The name of the server to be created.")
             .description_localized("en-GB", "The name of the server to be created.")
-            .required(true),
+            .required(true)
+            .max_length(100),
         )
         .add_option(
             CreateCommandOption::new(

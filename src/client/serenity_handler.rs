@@ -1,12 +1,8 @@
 use crate::client::error::ClientError;
 use crate::commands;
-use crate::commands::list_severs::get_page;
-use crate::util::msg::Msg;
+use crate::commands::list::get_page;
 use crate::util::{EMBED_COLOR, parse_key};
-use serenity::all::{
-    CreateActionRow, CreateEmbed, CreateInteractionResponse, CreateInteractionResponseMessage,
-    EditInteractionResponse,
-};
+use serenity::all::{CreateEmbed, CreateInteractionResponseMessage, EditInteractionResponse};
 use serenity::{
     async_trait,
     client::{Context, EventHandler},
@@ -26,7 +22,7 @@ impl EventHandler for SerenityHandler {
                 &ctx.http,
                 vec![
                     commands::create::register(),
-                    commands::list_severs::register(),
+                    commands::list::register(),
                     commands::delete::register(),
                     commands::start::register(),
                     commands::stop::register(),
@@ -41,36 +37,32 @@ impl EventHandler for SerenityHandler {
 
     async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
         if let Interaction::Command(command) = interaction {
-            let content_res = match command.data.name.as_str() {
-                "create" => commands::create::run(&ctx, &command.data.options()).await,
-                "list-servers" => commands::list_severs::run(&ctx).await,
-                "delete" => commands::delete::run(&ctx, &command.data.options()).await,
-                "start" => commands::start::run(&ctx, &command.data.options()).await,
-                "stop" => commands::stop::run(&ctx, &command.data.options()).await,
+            let res = match command.data.name.as_str() {
+                "create" => commands::create::run(&ctx, &command).await,
+                "list" => commands::list::run(&ctx, &command).await,
+                "delete" => commands::delete::run(&ctx, &command).await,
+                "start" => commands::start::run(&ctx, &command).await,
+                "stop" => commands::stop::run(&ctx, &command).await,
                 _ => Err(ClientError::OtherStatic(
                     "Slash command defined at Discord but not in the bot.",
                 )),
             };
-
-            let message = content_res.unwrap_or_else(|error| Msg {
-                embed: CreateEmbed::new()
+            if let Err(error) = res {
+                let embed = CreateEmbed::new()
                     .description(error.to_string())
-                    .color(EMBED_COLOR),
-                buttons: vec![],
-            });
+                    .color(EMBED_COLOR);
 
-            let mut interaction = CreateInteractionResponseMessage::new().embed(message.embed);
-
-            if !message.buttons.is_empty() {
-                interaction =
-                    interaction.components(vec![CreateActionRow::Buttons(message.buttons)]);
-            }
-
-            if let Err(error) = command
-                .create_response(&ctx.http, CreateInteractionResponse::Message(interaction))
-                .await
-            {
-                log::error!("Cannot respond to slash command: {error}");
+                if let Err(err) = command
+                    .create_response(
+                        &ctx.http,
+                        serenity::builder::CreateInteractionResponse::Message(
+                            CreateInteractionResponseMessage::new().add_embed(embed),
+                        ),
+                    )
+                    .await
+                {
+                    log::error!("Cannot respond to slash command: {err}");
+                }
             }
         } else if let Interaction::Component(component) = interaction {
             if component.data.custom_id.starts_with("page-") {

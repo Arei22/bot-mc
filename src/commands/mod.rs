@@ -3,33 +3,32 @@ use serenity::all::{ResolvedOption, ResolvedValue};
 
 pub mod create;
 pub mod delete;
-pub mod list_severs;
+pub mod list;
 pub mod start;
 pub mod stop;
 
 pub fn extract_str<'a>(
-    index: usize,
-    options: &'a [ResolvedOption<'_>],
+    name: &str,
+    options: Vec<ResolvedOption<'a>>,
 ) -> Result<&'a str, ClientError> {
-    options
-        .get(index)
-        .and_then(|option| match &option.value {
-            ResolvedValue::String(value) => Some(*value),
-            _ => None,
-        })
-        .ok_or_else(|| ClientError::Other(format!("Invalid value at index {index}.")))
+    options.iter().find(|option| option.name == name).map_or(
+        Err(ClientError::Other(format!("Missing arg {name}."))),
+        |opt| match &opt.value {
+            ResolvedValue::String(value) => Ok(*value),
+            _ => Err(ClientError::Other(format!("Invalid value for arg {name}."))),
+        },
+    )
 }
 
 pub fn extract_str_optional<'a>(
-    index: usize,
-    options: &'a [ResolvedOption<'_>],
+    name: &str,
+    options: Vec<ResolvedOption<'a>>,
 ) -> Result<Option<&'a str>, ClientError> {
     options
-        .get(index)
+        .iter()
+        .find(|option| option.name == name)
         .map_or(Ok(None), |option| match &option.value {
             ResolvedValue::String(value) => Ok(Some(*value)),
-            _ => Err(ClientError::Other(format!(
-                "Invalid value at index {index}."
-            ))),
+            _ => Err(ClientError::Other(format!("Invalid value for arg {name}."))),
         })
 }

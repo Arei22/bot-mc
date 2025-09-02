@@ -2,18 +2,18 @@ use crate::client::error::ClientError;
 use crate::commands::extract_str;
 use crate::database::postgresql::{PgPool, PgPooled};
 use crate::database::schemas::servers::dsl as servers_dsl;
-use crate::util::msg::Msg;
 use crate::util::{EMBED_COLOR, get_pool_from_ctx};
 use diesel::dsl::exists;
 use diesel::{ExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
 use serenity::all::{
-    CommandOptionType, Context, CreateCommand, CreateCommandOption, CreateEmbed, ResolvedOption,
+    CommandInteraction, CommandOptionType, Context, CreateCommand, CreateCommandOption,
+    CreateEmbed, CreateInteractionResponseMessage,
 };
 use tokio::process::Command;
 
-pub async fn run(ctx: &Context, options: &[ResolvedOption<'_>]) -> Result<Msg, ClientError> {
-    let name = extract_str(0, options)?.to_lowercase();
+pub async fn run(ctx: &Context, command: &CommandInteraction) -> Result<(), ClientError> {
+    let name = extract_str("name", command.data.options())?.to_lowercase();
 
     let pool: PgPool = get_pool_from_ctx(ctx).await?;
     let mut conn: PgPooled = pool.get().await?;
@@ -53,14 +53,20 @@ pub async fn run(ctx: &Context, options: &[ResolvedOption<'_>]) -> Result<Msg, C
 
     log::info!("server started : {name}!");
 
-    let msg = Msg {
-        embed: CreateEmbed::new()
-            .description("Serveur démaré !")
-            .color(EMBED_COLOR),
-        buttons: vec![],
-    };
+    let embed = CreateEmbed::new()
+        .description(format!("**Serveur ``{name}`` démaré !**"))
+        .color(EMBED_COLOR);
 
-    Ok(msg)
+    command
+        .create_response(
+            &ctx.http,
+            serenity::builder::CreateInteractionResponse::Message(
+                CreateInteractionResponseMessage::new().add_embed(embed),
+            ),
+        )
+        .await?;
+
+    Ok(())
 }
 
 pub fn register() -> CreateCommand {
@@ -77,6 +83,7 @@ pub fn register() -> CreateCommand {
             )
             .description_localized("en-US", "The name of the server to start.")
             .description_localized("en-GB", "The name of the server to start.")
-            .required(true),
+            .required(true)
+            .max_length(100),
         )
 }
