@@ -1,12 +1,10 @@
 [package]
-name = "scan-website-discord-bot"
-version = "0.1.8"
+name = "bot-mc"
+version = "0.2.0"
 authors = ["Arei2", "Asthowen<contact@asthowen.fr>"]
 edition = "2024"
-description = "A Discord bot to initiate downloads on ScanWebsite based on filters applied to messages."
-repository = "https://github.com/arei22/scan-website-discord-bot"
-readme = "README.md"
-publish = false
+description = "A Discord bot to create and manage minecraft server."
+repository = "https://github.com/arei22/bot-mc"
 
 [profile.release]
 codegen-units = 1
@@ -39,5 +37,6 @@ diesel_migrations = "2.2.0"
 env_logger = "0.11.8"
 dotenvy = "0.15.7"
 chrono = "0.4.41"
-log = "0.4.27"
+log = "0.4.28"
 serde_yml = "0.0.12"
+serde_json = "1.0.143"

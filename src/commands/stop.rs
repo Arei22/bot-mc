@@ -95,6 +95,6 @@ pub fn register() -> CreateCommand {
             .description_localized("en-US", "The name of the server to stop.")
             .description_localized("en-GB", "The name of the server to stop.")
             .required(true)
-            .max_length(100),
+            .max_length(25),
         )
 }

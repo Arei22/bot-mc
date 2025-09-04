@@ -189,6 +189,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "bot-mc"
+version = "0.2.0"
+dependencies = [
+ "chrono",
+ "diesel",
+ "diesel-async",
+ "diesel_migrations",
+ "dotenvy",
+ "env_logger",
+ "log",
+ "reqwest 0.12.23",
+ "serde",
+ "serde_json",
+ "serde_yml",
+ "serenity",
+ "tokio",
+]
+
+[[package]]
 name = "bumpalo"
 version = "3.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1279,9 +1298,9 @@ dependencies = [
 
 [[package]]
 name = "log"
-version = "0.4.27"
+version = "0.4.28"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "13dc2df351e3202783a1fe0d44375f7295ffb4049267b0f3018346dc122a1d94"
+checksum = "34080505efa8e45a4b816c349525ebe327ceaa8559756f0356cba97ef3bf7432"
 
 [[package]]
 name = "md-5"
@@ -1971,24 +1990,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "scan-website-discord-bot"
-version = "0.1.8"
-dependencies = [
- "chrono",
- "diesel",
- "diesel-async",
- "diesel_migrations",
- "dotenvy",
- "env_logger",
- "log",
- "reqwest 0.12.23",
- "serde",
- "serde_yml",
- "serenity",
- "tokio",
-]
-
-[[package]]
 name = "schannel"
 version = "0.1.27"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2095,9 +2096,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.142"
+version = "1.0.143"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "030fedb782600dcbd6f02d479bf0d817ac3bb40d644745b769d6a96bc3afc5a7"
+checksum = "d401abef1d108fbd9cbaebc3e46611f4b1021f714a0597a71f41ee463f5f4a5a"
 dependencies = [
  "itoa",
  "memchr",

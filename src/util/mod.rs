@@ -6,7 +6,6 @@ use std::str::FromStr;
 use tokio::signal::unix::SignalKind;
 
 pub mod logger;
-pub mod msg;
 
 pub const EMBED_COLOR: u64 = 14423107;
 

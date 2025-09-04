@@ -1,7 +1,7 @@
-use scan_website_discord_bot::client::Client;
-use scan_website_discord_bot::database::postgresql::run_migration;
-use scan_website_discord_bot::util::logger::init as init_logger;
-use scan_website_discord_bot::util::{exit_if_keys_not_exist, wait_for_shutdown_signal};
+use bot_mc::client::Client;
+use bot_mc::database::postgresql::run_migration;
+use bot_mc::util::logger::init as init_logger;
+use bot_mc::util::{exit_if_keys_not_exist, wait_for_shutdown_signal};
 use std::error::Error;
 use tokio::task::JoinHandle;
 
