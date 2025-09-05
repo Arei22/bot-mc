@@ -14,4 +14,5 @@
 pub mod client;
 pub mod commands;
 pub mod database;
+pub mod interarction;
 pub mod util;

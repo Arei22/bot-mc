@@ -15,6 +15,7 @@ pub enum ClientError {
     TryFromIntError(String),
     YmlError(String),
     IoError(String),
+    JsonError(String),
     OtherStatic(&'static str),
     Other(String),
 }
@@ -32,6 +33,7 @@ impl fmt::Display for ClientError {
             }
             Self::YmlError(error) => write!(f, "**yml conversion erreur: {error}**"),
             Self::IoError(error) => write!(f, "**file erreur: {error}**"),
+            Self::JsonError(error) => write!(f, "**parse json file ereur: {error}**"),
             Self::OtherStatic(error) => write!(f, "**Erreur: {error}**"),
             Self::Other(error) => write!(f, "**Erreur: {error}**"),
         }
@@ -84,6 +86,12 @@ impl From<serde_yml::Error> for ClientError {
 
 impl From<std::io::Error> for ClientError {
     fn from(error: std::io::Error) -> Self {
-        Self::YmlError(error.to_string())
+        Self::IoError(error.to_string())
+    }
+}
+
+impl From<serde_json::Error> for ClientError {
+    fn from(error: serde_json::Error) -> Self {
+        Self::JsonError(error.to_string())
     }
 }

@@ -1,8 +1,9 @@
 use crate::client::error::ClientError;
 use crate::commands;
-use crate::commands::list::get_page;
+use crate::interarction::autocomplete_version::autocomplete_version;
+use crate::interarction::button_list::button_list;
 use crate::util::{EMBED_COLOR, parse_key};
-use serenity::all::{CreateEmbed, CreateInteractionResponseMessage, EditInteractionResponse};
+use serenity::all::{CreateEmbed, CreateInteractionResponseMessage};
 use serenity::{
     async_trait,
     client::{Context, EventHandler},
@@ -66,29 +67,12 @@ impl EventHandler for SerenityHandler {
             }
         } else if let Interaction::Component(component) = interaction {
             if component.data.custom_id.starts_with("page-") {
-                let page = component
-                    .data
-                    .custom_id
-                    .split('-')
-                    .next_back()
-                    .and_then(|page| page.parse::<u64>().ok())
-                    .unwrap_or_default();
-
-                if let Err(e) = component.defer(&ctx.http).await {
-                    log::error!("Failed to defer interaction: {e}");
-                    return;
-                }
-                if let Err(e) = component
-                    .edit_response(
-                        &ctx,
-                        get_page(&ctx, page).await.unwrap_or_else(|error| {
-                            EditInteractionResponse::new()
-                                .embed(CreateEmbed::new().description(error.to_string()))
-                        }),
-                    )
-                    .await
-                {
-                    log::error!("Failed to edit interaction response: {e}");
+                button_list(ctx, component).await;
+            }
+        } else if let Interaction::Autocomplete(command) = interaction {
+            if command.data.name == "create" {
+                if let Err(e) = autocomplete_version(ctx, command).await {
+                    log::error!("{e}");
                 }
             }
         }

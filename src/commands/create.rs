@@ -17,8 +17,9 @@ use serenity::all::{CommandOptionType, Context, CreateCommand, CreateCommandOpti
 use tokio::fs;
 
 pub async fn run(ctx: &Context, command: &CommandInteraction) -> Result<(), ClientError> {
-    let name = extract_str("name", command.data.options())?.to_lowercase();
-    let ver = extract_str_optional("version", command.data.options())?;
+    let name = extract_str("name", &command.data.options())?.to_lowercase();
+    let ver = extract_str_optional("version", &command.data.options())?;
+    let difficulty_option = extract_str_optional("difficulty", &command.data.options())?;
 
     let pool: PgPool = get_pool_from_ctx(ctx).await?;
     let mut conn: PgPooled = pool.get().await?;
@@ -47,15 +48,34 @@ pub async fn run(ctx: &Context, command: &CommandInteraction) -> Result<(), Clie
     );
 
     let mut env = Mapping::new();
+
     env.insert(Value::String("EULA".into()), Value::String("TRUE".into()));
+
     env.insert(
         Value::String("OPS".to_string()),
         Value::String(parse_key::<String>("ADMIN_PLAYER")?),
     );
+
     if let Some(version) = ver {
+        let json = fs::read_to_string("versions.json").await?;
+        let versions: Vec<String> = serde_json::from_str(&json)?;
+
+        if versions.iter().any(|e| e == version) {
+            env.insert(
+                Value::String("VERSION".to_string()),
+                Value::String(version.to_string()),
+            );
+        } else {
+            return Err(ClientError::Other(format!(
+                "{version} n'est pas une version valide."
+            )));
+        }
+    }
+
+    if let Some(difficulty) = difficulty_option {
         env.insert(
-            Value::String("VERSION".to_string()),
-            Value::String(version.to_string()),
+            Value::String("DIFFICULTY".to_string()),
+            Value::String(difficulty.to_string()),
         );
     }
 
@@ -128,6 +148,20 @@ pub fn register() -> CreateCommand {
                 "La version du serveur.",
             )
             .description_localized("en-US", "The version of the server to be created.")
-            .description_localized("en-GB", "The version of the server to be created."),
+            .description_localized("en-GB", "The version of the server to be created.")
+            .set_autocomplete(true),
+        )
+        .add_option(
+            CreateCommandOption::new(
+                CommandOptionType::String,
+                "difficulty",
+                "La difficulté du serveur.",
+            )
+            .description_localized("en-US", "The difficulty of the server to be created.")
+            .description_localized("en-GB", "The difficulty of the server to be created.")
+            .add_string_choice("peaceful", "peaceful")
+            .add_string_choice("easy", "easy")
+            .add_string_choice("normal", "normal")
+            .add_string_choice("hard", "hard"),
         )
 }

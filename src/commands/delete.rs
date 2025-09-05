@@ -13,7 +13,7 @@ use serenity::all::{
 use tokio::fs;
 
 pub async fn run(ctx: &Context, command: &CommandInteraction) -> Result<(), ClientError> {
-    let name = extract_str("name", command.data.options())?.to_lowercase();
+    let name = extract_str("name", &command.data.options())?.to_lowercase();
 
     let pool: PgPool = get_pool_from_ctx(ctx).await?;
     let mut conn: PgPooled = pool.get().await?;
