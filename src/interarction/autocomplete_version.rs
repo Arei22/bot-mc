@@ -20,10 +20,9 @@ pub async fn autocomplete_version(
             value: str,
         } => {
             let a: Vec<String> = versions
-                .iter()
+                .into_iter()
                 .filter(|ver| ver.contains(str))
                 .take(25)
-                .cloned()
                 .collect();
 
             let mut auto_complete = CreateAutocompleteResponse::new();

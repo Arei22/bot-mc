@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use crate::client::error::ClientError;
 use crate::commands::extract_str;
 use crate::commands::extract_str_optional;
@@ -33,6 +35,25 @@ pub async fn run(ctx: &Context, command: &CommandInteraction) -> Result<(), Clie
         return Err(ClientError::OtherStatic("Ce nom de serveur existe déjà."));
     }
 
+    let ports_used: Vec<i64> = servers_dsl::servers
+        .select(servers_dsl::port)
+        .order_by(servers_dsl::port)
+        .load::<i64>(&mut conn)
+        .await?;
+
+    let mut port = 0;
+
+    for i in parse_key::<i64>("MIN_PORT")?..parse_key::<i64>("MAX_PORT")? {
+        if !ports_used.contains(&i) {
+            port = i;
+            break;
+        }
+    }
+
+    if port == 0 {
+        return Err(ClientError::OtherStatic("Pas de port disponible."));
+    }
+
     let mut services = Mapping::new();
 
     let mut mc = Mapping::new();
@@ -44,7 +65,7 @@ pub async fn run(ctx: &Context, command: &CommandInteraction) -> Result<(), Clie
     mc.insert(Value::String("stdin_open".into()), Value::Bool(true));
     mc.insert(
         Value::String("ports".into()),
-        Value::Sequence(vec![Value::String("25565:25565".into())]),
+        Value::Sequence(vec![Value::String(format!("{}:25565", port.to_string(),))]),
     );
 
     let mut env = Mapping::new();
@@ -52,7 +73,7 @@ pub async fn run(ctx: &Context, command: &CommandInteraction) -> Result<(), Clie
     env.insert(Value::String("EULA".into()), Value::String("TRUE".into()));
 
     env.insert(
-        Value::String("OPS".to_string()),
+        Value::String("OPS".into()),
         Value::String(parse_key::<String>("ADMIN_PLAYER")?),
     );
 
@@ -62,8 +83,8 @@ pub async fn run(ctx: &Context, command: &CommandInteraction) -> Result<(), Clie
 
         if versions.iter().any(|e| e == version) {
             env.insert(
-                Value::String("VERSION".to_string()),
-                Value::String(version.to_string()),
+                Value::String("VERSION".into()),
+                Value::String(version.into()),
             );
         } else {
             return Err(ClientError::Other(format!(
@@ -74,10 +95,15 @@ pub async fn run(ctx: &Context, command: &CommandInteraction) -> Result<(), Clie
 
     if let Some(difficulty) = difficulty_option {
         env.insert(
-            Value::String("DIFFICULTY".to_string()),
-            Value::String(difficulty.to_string()),
+            Value::String("DIFFICULTY".into()),
+            Value::String(difficulty.into()),
         );
     }
+
+    env.insert(
+        Value::String("MAX_MEMORY".into()),
+        Value::String(parse_key::<String>("MAX_MEMORY")?),
+    );
 
     mc.insert(Value::String("environment".into()), Value::Mapping(env));
 
@@ -93,15 +119,19 @@ pub async fn run(ctx: &Context, command: &CommandInteraction) -> Result<(), Clie
 
     let yml_str = serde_yml::to_string(&root)?;
 
-    let dir = format!("worlds/{name}");
+    let dir = Path::new("worlds").join(&name);
 
     fs::create_dir_all(&dir).await?;
-    fs::write(format!("{dir}/docker-compose.yml"), yml_str).await?;
+    fs::write(dir.join("docker-compose.yml"), yml_str).await?;
 
     insert_into(servers_dsl::servers)
         .values((
             servers_dsl::name.eq(&name),
             servers_dsl::version.eq(ver.map_or_else(|| "latest", |version| version).to_string()),
+            servers_dsl::difficulty
+                .eq(difficulty_option.map_or_else(|| "easy", |difficulty| difficulty)),
+            servers_dsl::port.eq(port),
+            servers_dsl::started.eq(false),
         ))
         .execute(&mut conn)
         .await?;

@@ -6,6 +6,8 @@ use diesel::{Queryable, Selectable};
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct Servers {
     pub name: String,
-    pub adresse: Option<String>,
     pub version: String,
+    pub difficulty: String,
+    pub port: i64,
+    pub started: bool,
 }

@@ -2,7 +2,7 @@
 # Necessary dependencies to build bot-mc
 FROM rust:alpine AS build
 
-LABEL version="0.2.1" maintainer="Arei2<contact@are2.fr>"
+LABEL version="0.2.1" maintainer="Arei2<contact@arei2.fr>"
 
 RUN apk update && apk upgrade
 RUN apk add --no-cache \

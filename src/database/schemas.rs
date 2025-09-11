@@ -1,7 +1,9 @@
 diesel::table! {
     servers (name) {
         name -> Text,
-        adresse -> Nullable<Text>,
-        version -> Text
+        version -> Text,
+        difficulty -> Text,
+        port -> BigInt,
+        started -> Bool
     }
 }

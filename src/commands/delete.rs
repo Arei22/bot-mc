@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use crate::client::error::ClientError;
 use crate::commands::extract_str;
 use crate::database::postgresql::{PgPool, PgPooled};
@@ -28,19 +30,19 @@ pub async fn run(ctx: &Context, command: &CommandInteraction) -> Result<(), Clie
         return Err(ClientError::OtherStatic("Ce serveur n'existe pas."));
     }
 
-    let serv_stoped: bool = diesel::select(exists(
+    let serv_started: bool = diesel::select(exists(
         servers_dsl::servers
-            .filter(servers_dsl::name.eq(&name))
-            .filter(servers_dsl::adresse.is_null()),
+            .filter(servers_dsl::started.eq(true))
+            .filter(servers_dsl::name.eq(&name)),
     ))
     .get_result(&mut conn)
     .await?;
 
-    if !serv_stoped {
-        return Err(ClientError::OtherStatic("Ce serveur est lancé."));
+    if serv_started {
+        return Err(ClientError::OtherStatic("Le serveur est lancé."));
     }
 
-    fs::remove_dir_all(format!("worlds/{name}")).await?;
+    fs::remove_dir_all(Path::new("worlds").join(&name)).await?;
 
     delete(servers_dsl::servers)
         .filter(servers_dsl::name.eq(&name))

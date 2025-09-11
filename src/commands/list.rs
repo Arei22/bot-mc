@@ -1,7 +1,7 @@
 use crate::client::error::ClientError;
 use crate::database::postgresql::{PgPool, PgPooled};
 use crate::database::schemas::servers::dsl as servers_dsl;
-use crate::util::{EMBED_COLOR, get_pool_from_ctx};
+use crate::util::{EMBED_COLOR, get_pool_from_ctx, parse_key};
 use diesel::{QueryDsl, Queryable};
 use diesel_async::RunQueryDsl;
 use serenity::all::{
@@ -10,13 +10,15 @@ use serenity::all::{
 };
 use serenity::builder::CreateEmbed;
 
-const ELEMENT_PER_PAGE: u64 = 8;
+const ELEMENT_PER_PAGE: u64 = 4;
 
 #[derive(Debug, Clone, Queryable)]
 struct ServersList {
     pub name: String,
-    pub adresse: Option<String>,
     pub version: String,
+    pub difficulty: String,
+    pub port: i64,
+    pub started: bool,
 }
 
 async fn get_servers(
@@ -39,11 +41,14 @@ async fn get_servers(
     let servers: Vec<ServersList> = servers_dsl::servers
         .select((
             servers_dsl::name,
-            servers_dsl::adresse,
             servers_dsl::version,
+            servers_dsl::difficulty,
+            servers_dsl::port,
+            servers_dsl::started,
         ))
         .limit(ELEMENT_PER_PAGE as i64)
         .offset(i64::try_from(page.saturating_sub(1) * ELEMENT_PER_PAGE)?)
+        .order_by(servers_dsl::name)
         .load::<ServersList>(&mut conn)
         .await?;
 
@@ -69,19 +74,20 @@ pub async fn run(ctx: &Context, command: &CommandInteraction) -> Result<(), Clie
         return Ok(());
     }
 
-    let mut prefixes_strings: Vec<String> = Vec::new();
-    for server in servers {
-        prefixes_strings.push(format!(
-            "* **{}**\n  * **Adresse** : ``{}``\n  * **Version** : ``{}``",
+    let ip = parse_key::<String>("IP")?;
+
+    let servers_strings: Vec<String> = servers.iter().map(|server| format!(
+            "* **{}**\n  * **Adresse** : ``{}``\n  * **Version** : ``{}``\n  * **Difficulté** : ``{}``\n  * **Démarré** : ``{}``",
             server.name,
-            server.adresse.as_deref().unwrap_or(""),
+            format!("{}:{}", ip, server.port),
             server.version,
-        ));
-    }
+            server.difficulty,
+            if server.started {"oui"} else {"non"},
+        )).collect();
 
     let embed = CreateEmbed::new()
         .title("Liste des serveurs")
-        .description(prefixes_strings.join("\n"))
+        .description(servers_strings.join("\n"))
         .footer(CreateEmbedFooter::new(format!("Page 1/{pages_count}")))
         .color(EMBED_COLOR);
 
@@ -132,21 +138,22 @@ pub async fn get_page(
         return Ok(msg);
     }
 
-    let mut prefixes_strings: Vec<String> = Vec::new();
-    for server in servers {
-        prefixes_strings.push(format!(
-            "* **{}**\n  * **Adresse** : ``{}``\n  * **Version** : ``{}``",
+    let ip = parse_key::<String>("IP")?;
+
+    let servers_strings: Vec<String> = servers.iter().map(|server| format!(
+            "* **{}**\n  * **Adresse** : ``{}``\n  * **Version** : ``{}``\n  * **Difficulté** : ``{}``\n  * **Démarré** : ``{}``",
             server.name,
-            server.adresse.as_deref().unwrap_or(""),
-            server.version
-        ));
-    }
+            format!("{}:{}", ip, server.port),
+            server.version,
+            server.difficulty,
+            if server.started {"oui"} else {"non"},
+        )).collect();
 
     let msg: EditInteractionResponse = EditInteractionResponse::new()
         .embed(
             CreateEmbed::new()
                 .title("Liste des serveurs")
-                .description(prefixes_strings.join("\n"))
+                .description(servers_strings.join("\n"))
                 .footer(CreateEmbedFooter::new(format!("Page {page}/{pages_count}")))
                 .color(EMBED_COLOR),
         )

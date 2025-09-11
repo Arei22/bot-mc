@@ -23,19 +23,19 @@ pub enum ClientError {
 impl fmt::Display for ClientError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Self::SerenityError(error) => write!(f, "**Serenity erreur: {error}**"),
-            Self::BB8Error(error) => write!(f, "**bb8 erreur: {error}**"),
-            Self::DieselError(error) => write!(f, "**diesel erreur: {error}**"),
-            Self::ReqwestError(error) => write!(f, "**reqwest erreur: {error}**"),
-            Self::VarError(error) => write!(f, "**missing env var: {error}**"),
+            Self::SerenityError(error) => write!(f, "**Serenity erreur : {error}**"),
+            Self::BB8Error(error) => write!(f, "**bb8 erreur : {error}**"),
+            Self::DieselError(error) => write!(f, "**diesel erreur : {error}**"),
+            Self::ReqwestError(error) => write!(f, "**reqwest erreur : {error}**"),
+            Self::VarError(error) => write!(f, "**missing env var : {error}**"),
             Self::TryFromIntError(error) => {
-                write!(f, "**integer type conversion erreur: {error}**")
+                write!(f, "**integer type conversion erreur : {error}**")
             }
-            Self::YmlError(error) => write!(f, "**yml conversion erreur: {error}**"),
-            Self::IoError(error) => write!(f, "**file erreur: {error}**"),
-            Self::JsonError(error) => write!(f, "**parse json file ereur: {error}**"),
-            Self::OtherStatic(error) => write!(f, "**Erreur: {error}**"),
-            Self::Other(error) => write!(f, "**Erreur: {error}**"),
+            Self::YmlError(error) => write!(f, "**yml conversion erreur : {error}**"),
+            Self::IoError(error) => write!(f, "**file erreur : {error}**"),
+            Self::JsonError(error) => write!(f, "**parse json file ereur : {error}**"),
+            Self::OtherStatic(error) => write!(f, "**Erreur : {error}**"),
+            Self::Other(error) => write!(f, "**Erreur : {error}**"),
         }
     }
 }

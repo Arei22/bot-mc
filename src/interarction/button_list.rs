@@ -1,6 +1,5 @@
-use serenity::all::{ComponentInteraction, Context, CreateEmbed, EditInteractionResponse};
-
 use crate::commands::list::get_page;
+use serenity::all::{ComponentInteraction, Context, CreateEmbed, EditInteractionResponse};
 
 pub async fn button_list(ctx: Context, component: ComponentInteraction) {
     let page = component

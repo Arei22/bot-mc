@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use crate::client::error::ClientError;
 use crate::commands::extract_str;
 use crate::database::postgresql::{PgPool, PgPooled};
@@ -28,26 +30,24 @@ pub async fn run(ctx: &Context, command: &CommandInteraction) -> Result<(), Clie
         return Err(ClientError::OtherStatic("Ce serveur n'existe pas."));
     }
 
-    let serv_stoped: bool = diesel::select(exists(
-        servers_dsl::servers
-            .filter(servers_dsl::name.eq(&name))
-            .filter(servers_dsl::adresse.is_null()),
+    let serv_started: bool = diesel::select(exists(
+        servers_dsl::servers.filter(servers_dsl::started.eq(true)),
     ))
     .get_result(&mut conn)
     .await?;
 
-    if !serv_stoped {
-        return Err(ClientError::OtherStatic("Ce serveur est déjà lancé."));
+    if serv_started {
+        return Err(ClientError::OtherStatic("Un serveur est déjà lancé."));
     }
 
     Command::new("docker")
         .args(["compose", "up", "-d"])
-        .current_dir(format!("worlds/{name}"))
+        .current_dir(Path::new("worlds").join(&name))
         .status()
         .await?;
 
     diesel::update(servers_dsl::servers.filter(servers_dsl::name.eq(&name)))
-        .set(servers_dsl::adresse.eq("localhost:25565"))
+        .set(servers_dsl::started.eq(true))
         .execute(&mut conn)
         .await?;
 
