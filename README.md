@@ -15,7 +15,7 @@
 </div>
 
 ## Informations
-    This is a discord bot with which you can create, start, stop and delete servers. You can actually create a server in the version and difficulty of your choice, and you can also list all the servers created. For now there is not the possibility to use a mod, a map, or a plugin. 
+This is a discord bot with which you can create, start, stop and delete servers. You can actually create a server in the version and difficulty of your choice, and you can also list all the servers created. For now there is not the possibility to use a mod, a map, or a plugin. 
 
 
 ## Contributors
