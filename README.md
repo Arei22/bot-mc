@@ -22,4 +22,4 @@ This is a discord bot with which you can create, start, stop and delete servers.
 [<img width="45" src="https://avatars.githubusercontent.com/u/126862312?s=96&v=4" alt="Arei2">](https://github.com/Arei22)
 
 ## License
-**[Blest](https://github.com/arei22) | [GNU GENERAL PUBLIC LICENSE 3.0](https://github.com/arei22/Blest/blob/main/LICENSE.txt)**
+**[Bot-mc](https://github.com/arei22) | [GNU GENERAL PUBLIC LICENSE 3.0](https://github.com/arei22/Bot-mc/blob/main/LICENSE.txt)**
