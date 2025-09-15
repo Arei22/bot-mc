@@ -25,8 +25,8 @@ RUN apk add --no-cache --update tzdata
 ENV TZ=Europe/Paris
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-WORKDIR "/bot_mc"
+WORKDIR "/bot-mc"
 
-COPY --from=build /bot_mc/target/x86_64-unknown-linux-musl/release/bot_mc ./bot_mc
+COPY --from=build /bot-mc/target/x86_64-unknown-linux-musl/release/bot-mc ./bot-mc
 
-CMD ["./bot_mc"]
+CMD ["./bot-mc"]
