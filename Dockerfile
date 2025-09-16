@@ -21,7 +21,7 @@ RUN cargo build --target x86_64-unknown-linux-musl --release
 # Necessary dependencies to run bot-mc
 FROM alpine:latest
 
-RUN apk add --no-cache --update tzdata
+RUN apk add --no-cache --update tzdata && apk add docker-cli
 ENV TZ=Europe/Paris
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
