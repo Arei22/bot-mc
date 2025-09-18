@@ -52,7 +52,6 @@ services:
       MIN_PORT: 10000
       MAX_PORT: 10500
       MAX_MEMORY: 20G
-      DEV_MODE: false
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     depends_on:

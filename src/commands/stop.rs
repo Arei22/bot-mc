@@ -4,7 +4,7 @@ use crate::client::error::ClientError;
 use crate::commands::extract_str;
 use crate::database::postgresql::{PgPool, PgPooled};
 use crate::database::schemas::servers::dsl as servers_dsl;
-use crate::util::{EMBED_COLOR, get_pool_from_ctx, parse_key};
+use crate::util::{EMBED_COLOR, get_pool_from_ctx};
 use diesel::dsl::exists;
 use diesel::{ExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
@@ -54,24 +54,6 @@ pub async fn run(ctx: &Context, command: &CommandInteraction) -> Result<(), Clie
             ),
         )
         .await?;
-
-    if !parse_key::<bool>("DEV_MODE")? {
-        let port: i64 = servers_dsl::servers
-            .select(servers_dsl::port)
-            .filter(servers_dsl::name.eq(&name))
-            .get_result(&mut conn)
-            .await?;
-
-        Command::new("firewall-cmd")
-            .args(["zone=public", &format!("remove-port={}/tcp", port)])
-            .status()
-            .await?;
-
-        Command::new("firewall-cmd")
-            .args(["reload"])
-            .status()
-            .await?;
-    }
 
     Command::new("docker")
         .args(["compose", "down"])
