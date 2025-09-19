@@ -40,6 +40,19 @@ pub async fn run(ctx: &Context, command: &CommandInteraction) -> Result<(), Clie
         return Err(ClientError::OtherStatic("Un serveur est déjà lancé."));
     }
 
+    let embed = CreateEmbed::new()
+        .description(format!("**Démarrage du serveur ``{name}`` ...**"))
+        .color(EMBED_COLOR);
+
+    command
+        .create_response(
+            &ctx.http,
+            serenity::builder::CreateInteractionResponse::Message(
+                CreateInteractionResponseMessage::new().add_embed(embed),
+            ),
+        )
+        .await?;
+
     let id: i64 = servers_dsl::servers
         .select(servers_dsl::id)
         .filter(servers_dsl::name.eq(&name))
@@ -47,7 +60,7 @@ pub async fn run(ctx: &Context, command: &CommandInteraction) -> Result<(), Clie
         .await?;
 
     Command::new("docker")
-        .args(["compose", "up", "-d"])
+        .args(["compose", "up", "-d", "--wait"])
         .current_dir(Path::new("worlds").join(id.to_string()))
         .status()
         .await?;
@@ -59,16 +72,14 @@ pub async fn run(ctx: &Context, command: &CommandInteraction) -> Result<(), Clie
 
     log::info!("server started : {name}!");
 
-    let embed = CreateEmbed::new()
+    let edited_embed = CreateEmbed::new()
         .description(format!("**Serveur ``{name}`` démaré !**"))
         .color(EMBED_COLOR);
 
     command
-        .create_response(
+        .edit_response(
             &ctx.http,
-            serenity::builder::CreateInteractionResponse::Message(
-                CreateInteractionResponseMessage::new().add_embed(embed),
-            ),
+            serenity::builder::EditInteractionResponse::new().add_embed(edited_embed),
         )
         .await?;
 

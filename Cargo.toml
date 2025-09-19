@@ -33,11 +33,11 @@ serenity = { version = "0.12.4", features = [
 ] }
 diesel = { version = "2.2.12", features = ["postgres", "uuid"] }
 reqwest = { version = "0.12.23", features = ["json"] }
-serde = { version = "1.0.219", features = ["derive"] }
+serde = { version = "1.0.225", features = ["derive"] }
 diesel_migrations = "2.2.0"
 env_logger = "0.11.8"
 dotenvy = "0.15.7"
 chrono = "0.4.42"
 log = "0.4.28"
 serde_yml = "0.0.12"
-serde_json = "1.0.143"
+serde_json = "1.0.145"

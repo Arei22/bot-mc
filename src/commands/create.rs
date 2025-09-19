@@ -112,6 +112,21 @@ pub async fn run(ctx: &Context, command: &CommandInteraction) -> Result<(), Clie
         Value::Sequence(vec![Value::String("./data:/data".into())]),
     );
 
+    let mut healthcheck = Mapping::new();
+
+    healthcheck.insert(
+        Value::String("test".into()),
+        Value::String("mc-health".into()),
+    );
+    healthcheck.insert(
+        Value::String("start_period".into()),
+        Value::String("1m".into()),
+    );
+    healthcheck.insert(Value::String("interval".into()), Value::String("5s".into()));
+    healthcheck.insert(Value::String("retries".into()), Value::String("20".into()));
+
+    mc.insert("healthcheck".into(), Value::Mapping(healthcheck));
+
     services.insert(Value::String("mc".into()), Value::Mapping(mc));
 
     let mut root = Mapping::new();
