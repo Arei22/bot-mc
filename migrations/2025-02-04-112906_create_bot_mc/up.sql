@@ -1,5 +1,6 @@
 create table public.servers (
-  name text primary key not null,
+  id BIGSERIAL primary key not null,
+  name text unique not null,
   version text not null,
   difficulty text not null,
   port BigInt not null,

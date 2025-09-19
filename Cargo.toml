@@ -1,6 +1,6 @@
 [package]
 name = "bot-mc"
-version = "0.2.2"
+version = "0.2.3"
 authors = ["Arei2<contact@arei2.fr>"]
 edition = "2024"
 description = "A Discord bot to create and manage minecraft server."

@@ -40,9 +40,15 @@ pub async fn run(ctx: &Context, command: &CommandInteraction) -> Result<(), Clie
         return Err(ClientError::OtherStatic("Un serveur est déjà lancé."));
     }
 
+    let id: i64 = servers_dsl::servers
+        .select(servers_dsl::id)
+        .filter(servers_dsl::name.eq(&name))
+        .get_result(&mut conn)
+        .await?;
+
     Command::new("docker")
         .args(["compose", "up", "-d"])
-        .current_dir(Path::new("worlds").join(&name))
+        .current_dir(Path::new("worlds").join(id.to_string()))
         .status()
         .await?;
 

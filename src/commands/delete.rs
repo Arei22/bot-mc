@@ -42,7 +42,13 @@ pub async fn run(ctx: &Context, command: &CommandInteraction) -> Result<(), Clie
         return Err(ClientError::OtherStatic("Le serveur est lancé."));
     }
 
-    fs::remove_dir_all(Path::new("worlds").join(&name)).await?;
+    let id: i64 = servers_dsl::servers
+        .select(servers_dsl::id)
+        .filter(servers_dsl::name.eq(&name))
+        .get_result(&mut conn)
+        .await?;
+
+    fs::remove_dir_all(Path::new("worlds").join(id.to_string())).await?;
 
     delete(servers_dsl::servers)
         .filter(servers_dsl::name.eq(&name))

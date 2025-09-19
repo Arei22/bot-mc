@@ -119,12 +119,7 @@ pub async fn run(ctx: &Context, command: &CommandInteraction) -> Result<(), Clie
 
     let yml_str = serde_yml::to_string(&root)?;
 
-    let dir = Path::new("worlds").join(&name);
-
-    fs::create_dir_all(&dir).await?;
-    fs::write(dir.join("docker-compose.yml"), yml_str).await?;
-
-    insert_into(servers_dsl::servers)
+    let id: i64 = insert_into(servers_dsl::servers)
         .values((
             servers_dsl::name.eq(&name),
             servers_dsl::version.eq(ver.map_or_else(|| "latest", |version| version).to_string()),
@@ -133,8 +128,14 @@ pub async fn run(ctx: &Context, command: &CommandInteraction) -> Result<(), Clie
             servers_dsl::port.eq(port),
             servers_dsl::started.eq(false),
         ))
-        .execute(&mut conn)
+        .returning(servers_dsl::id)
+        .get_result(&mut conn)
         .await?;
+
+    let dir = Path::new("worlds").join(id.to_string());
+
+    fs::create_dir_all(&dir).await?;
+    fs::write(dir.join("docker-compose.yml"), yml_str).await?;
 
     log::info!("Created \"{name}\" server!");
 

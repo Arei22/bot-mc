@@ -5,6 +5,7 @@ use diesel::{Queryable, Selectable};
 #[diesel(table_name = servers)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct Servers {
+    pub id: i64,
     pub name: String,
     pub version: String,
     pub difficulty: String,
